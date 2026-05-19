@@ -1,0 +1,77 @@
+name: Tests
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+
+  smoke-own-readme:
+    name: Smoke (warn-only on own README)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./
+        with:
+          paths: "./README.md"
+
+  warn-only-true:
+    name: warn-only=true exits 0 on lint issues
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create bad fixture
+        run: |
+          printf '# Title\nbad line right after heading\n## Sub\nmore bad\n' > /tmp/bad.md
+      - uses: ./
+        with:
+          paths: "/tmp/bad.md"
+          warn-only: "true"
+
+  warn-only-false:
+    name: warn-only=false propagates failure
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create bad fixture
+        run: |
+          printf '# Title\nbad line right after heading\n## Sub\nmore bad\n' > /tmp/bad.md
+      - id: lint
+        continue-on-error: true
+        uses: ./
+        with:
+          paths: "/tmp/bad.md"
+          warn-only: "false"
+      - name: Assert step failed
+        run: |
+          if [ "${{ steps.lint.outcome }}" != "failure" ]; then
+            echo "::error::Expected warn-only=false to fail on bad.md, got outcome=${{ steps.lint.outcome }}"
+            exit 1
+          fi
+
+  version-pin:
+    name: version input pins pymarkdownlnt
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./
+        with:
+          paths: "./README.md"
+          version: "0.9.34"
+
+  disable-rules:
+    name: disable-rules suppresses targeted findings
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Create fixture violating only MD022 + MD041
+        run: |
+          # No top-level heading on line 1 (MD041), no blank around headings (MD022)
+          printf '# Title\nbad line right after heading\n## Sub\nmore bad\n' > /tmp/bad.md
+      - uses: ./
+        with:
+          paths: "/tmp/bad.md"
+          disable-rules: "MD022,MD041,MD025,MD024,MD012,MD009"
+          warn-only: "false"
