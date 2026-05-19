@@ -7,7 +7,7 @@ findings as a workflow warning annotation rather than failing the step.
 ## Usage
 
 ```yaml
-- uses: qlrd/pymarkdownlnt@v1
+- uses: qlrd/pymarkdownlnt-gh-action@v1
   with:
     disable-rules: "MD013,MD025,MD033,MD036,MD041"
     enable-rules:  "MD024"
@@ -46,4 +46,4 @@ of paths or set `globstar: "true"` and use a glob like `./**/*.md`.
 
 ## License
 
-MIT (add a LICENSE file before publishing).
+[MIT](./LICENSE)
